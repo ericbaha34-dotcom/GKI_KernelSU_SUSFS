@@ -242,7 +242,11 @@ jobs:
       run: |
         cat >> android/gki_aarch64_modules << 'EOF'
         net/wireless/cfg80211.ko
-        net/mac80211/mac80211.ko       
+        net/mac80211/mac80211.ko     
+        drivers/net/wireless/ralink/rt2x00/rt2x00lib.ko
+        drivers/net/wireless/ralink/rt2x00/rt2x00usb.ko
+        drivers/net/wireless/ralink/rt2x00/rt2800lib.ko
+        drivers/net/wireless/ralink/rt2x00/rt2800usb.ko      
         EOF
         
     - name: Apply Device-Specific Patches
