@@ -375,12 +375,6 @@ jobs:
     - name: Initialize Config Fragment
       run: touch "${{ github.workspace }}/wild_gki.fragment"
 
-    - name: Debug - Check gki_defconfig directly
-      shell: bash
-      run: |
-        grep -E "CONFIG_(RT2X00|RT2800USB|MAC80211|CFG80211|HAS_DMA)" \
-        "${{ github.workspace }}/kernel/common/arch/arm64/configs/gki_defconfig"
-
     - name: Build Normal Kernel
       env:
         SOURCE_DATE_EPOCH: ${{ env.SOURCE_DATE_EPOCH }}
@@ -397,12 +391,6 @@ jobs:
        mkdir -p "${{ github.workspace }}/AnyKernel3/modules"
        find /home/runner/out/dist/lib/modules -iname "*.ko" -exec cp {} "${{ github.workspace }}/AnyKernel3/modules/" \; || true
        ls -la "${{ github.workspace }}/AnyKernel3/modules/" || echo "No modules found"
-
-    - name: Debug - Check expanded .config
-      shell: bash
-      run: |
-         CONFIG_FILE=$(find /home/runner/out -iname ".config" 2>/dev/null | head -1)
-         grep -E "CONFIG_(RT2X00|RT2800USB|MAC80211|CFG80211|HAS_DMA)=" "$CONFIG_FILE"   
 
     - name: Get Cache Stats
       uses: ./.github/actions/cache-stats
