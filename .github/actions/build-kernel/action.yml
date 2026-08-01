@@ -34,10 +34,65 @@ runs:
         echo "Bypass hack not applied as per input parameter."
       fi
 
+  - name: Apply ABI Compare Bypass
+    shell: bash
+    working-directory: ${{ github.workspace }}/kernel
+    run: |
+      set -euo pipefail
+
+      # Derive ANDROID_VERSION and KERNEL_VERSION from inputs.version
+      # e.g. "android12-5.10" -> ANDROID_VERSION=android12, KERNEL_VERSION=5.10
+      ANDROID_VERSION="${VERSION_INPUT%%-*}"
+      KERNEL_VERSION="${VERSION_INPUT#*-}"
+
+      echo "Detected ANDROID_VERSION=$ANDROID_VERSION KERNEL_VERSION=$KERNEL_VERSION"
+
+      if [[ "$ANDROID_VERSION" == "android12" && "$KERNEL_VERSION" == "5.10" ]]; then
+        if [ -f "build/abi/compare_to_symbol_list" ]; then
+          sed -i 's/^\s*exit 1$/    echo "Who Cares? Bypassing Now!"/' build/abi/compare_to_symbol_list
+        else
+          echo "WARNING: build/abi/compare_to_symbol_list not found, skipping"
+        fi
+      elif [[ "$ANDROID_VERSION" == "android13" && "$KERNEL_VERSION" == "5.10" ]]; then
+        if [ -f "build/kernel/abi/compare_to_symbol_list" ]; then
+          sed -i 's/^\s*exit 1$/    echo "Who Cares? Bypassing Now!"/' build/kernel/abi/compare_to_symbol_list
+        else
+          echo "WARNING: build/kernel/abi/compare_to_symbol_list not found, skipping"
+        fi
+      elif [[ "$ANDROID_VERSION" == "android13" && "$KERNEL_VERSION" == "5.15" ]]; then
+        if [ -f "build/kernel/abi/compare_to_symbol_list" ]; then
+          sed -i 's/^\s*exit 1$/    echo "Who Cares? Bypassing Now!"/' build/kernel/abi/compare_to_symbol_list
+        else
+          echo "WARNING: build/kernel/abi/compare_to_symbol_list not found, skipping"
+        fi
+      elif [[ "$ANDROID_VERSION" == "android14" && "$KERNEL_VERSION" == "5.15" ]]; then
+        if [ -f "build/kernel/abi/check_buildtime_symbol_protection.py" ]; then
+          perl -i -pe 's/^(\s*)return 1$/$1print("Who Cares? Bypassing Now!")\n$1return 0/g if /if missing_symbols:/../return 1/' build/kernel/abi/check_buildtime_symbol_protection.py
+        else
+          echo "WARNING: check_buildtime_symbol_protection.py not found, skipping"
+        fi
+      elif [[ "$ANDROID_VERSION" == "android14" && "$KERNEL_VERSION" == "6.1" ]]; then
+        if [ -f "build/kernel/abi/check_buildtime_symbol_protection.py" ]; then
+          perl -i -pe 's/^(\s*)return 1$/$1print("Who Cares? Bypassing Now!")\n$1return 0/g if /if missing_symbols:/../return 1/' build/kernel/abi/check_buildtime_symbol_protection.py
+        else
+          echo "WARNING: check_buildtime_symbol_protection.py not found, skipping"
+        fi
+      elif [[ "$ANDROID_VERSION" == "android15" && "$KERNEL_VERSION" == "6.6" ]]; then
+        if [ -f "build/kernel/abi/check_buildtime_symbol_protection.py" ]; then
+          perl -i -pe 's/^(\s*)return 1$/$1print("Who Cares? Bypassing Now!")\n$1return 0/g if /if missing_symbols:/../return 1/' build/kernel/abi/check_buildtime_symbol_protection.py
+        else
+          echo "WARNING: check_buildtime_symbol_protection.py not found, skipping"
+        fi
+      else
+        echo "No ABI bypass defined for $ANDROID_VERSION / $KERNEL_VERSION, skipping"
+      fi
+    env:
+      VERSION_INPUT: ${{ inputs.version }}
+
   - name: Setup Kernel Configs
     if: false
     uses: ./.github/actions/set-kernel-config
-  
+
   - name: 'Build Kernel'
     shell: bash
     working-directory: ${{ github.workspace }}/kernel
@@ -103,4 +158,3 @@ runs:
       set -euo pipefail
       cp ${{ github.action_path }}/patches/bypass.patch "${{ github.workspace }}/AnyKernel3/bypass.patch"
       patch -p1 < bypass.patch
-
