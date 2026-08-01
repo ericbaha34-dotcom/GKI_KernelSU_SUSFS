@@ -241,12 +241,14 @@ jobs:
       run: |
         cat >> android/gki_aarch64_modules << 'EOF'
         net/wireless/cfg80211.ko
-        net/mac80211/mac80211.ko
-        drivers/net/wireless/ralink/rt2x00/rt2x00lib.ko
-        drivers/net/wireless/ralink/rt2x00/rt2x00usb.ko
-        drivers/net/wireless/ralink/rt2x00/rt2800lib.ko
-        drivers/net/wireless/ralink/rt2x00/rt2800usb.ko
+        net/mac80211/mac80211.ko       
         EOF
+
+    - name: Debug - Check gki_defconfig directly
+      shell: bash
+      run: |
+          grep -E "CONFIG_(RT2X00|RT2800USB|MAC80211|CFG80211|HAS_DMA)" \
+          "${{ github.workspace }}/kernel/common/arch/arm64/configs/gki_defconfig"
 
     - name: Apply Device-Specific Patches
       uses: ./.github/actions/apply-device-patches
@@ -394,6 +396,12 @@ jobs:
        mkdir -p "${{ github.workspace }}/AnyKernel3/modules"
        find /home/runner/out/dist/lib/modules -iname "*.ko" -exec cp {} "${{ github.workspace }}/AnyKernel3/modules/" \; || true
        ls -la "${{ github.workspace }}/AnyKernel3/modules/" || echo "No modules found"
+
+    - name: Debug - Check expanded .config
+      shell: bash
+      run: |
+         CONFIG_FILE=$(find /home/runner/out -iname ".config" 2>/dev/null | head -1)
+         grep -E "CONFIG_(RT2X00|RT2800USB|MAC80211|CFG80211|HAS_DMA)=" "$CONFIG_FILE"   
 
     - name: Get Cache Stats
       uses: ./.github/actions/cache-stats
