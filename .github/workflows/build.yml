@@ -249,6 +249,11 @@ jobs:
         drivers/net/wireless/ralink/rt2x00/rt2800usb.ko      
         EOF
         
+    - name: Sync GKI module allowlist to actual build output
+      shell: bash
+      run: |
+        cp /home/runner/out/common/modules.order "${{ github.workspace }}/kernel/common/android/gki_aarch64_modules"
+        
     - name: Apply Device-Specific Patches
       uses: ./.github/actions/apply-device-patches
       with:
