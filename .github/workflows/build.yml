@@ -208,6 +208,25 @@ jobs:
         config_list: |
           CONFIG_DEBUG_INFO_BTF=y
 
+    - name: Enable RT5572 Wi-Fi Driver (Full Dependency Chain)
+      uses: ./.github/actions/set-kernel-config
+      with:
+        config_list: |
+         CONFIG_USB=y
+         CONFIG_WIRELESS=y
+         CONFIG_WLAN=y
+         CONFIG_CFG80211=m
+         CONFIG_MAC80211=m     
+
+    - name: Update GKI module allowlist
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        cat >> android/gki_aarch64_modules << 'EOF'
+        net/wireless/cfg80211.ko
+        net/mac80211/mac80211.ko
+        EOF
+
     - name: Apply Device-Specific Patches
       uses: ./.github/actions/apply-device-patches
       with:
