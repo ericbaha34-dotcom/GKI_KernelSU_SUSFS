@@ -99,6 +99,15 @@ runs:
     run: |
       sed -i 's/check_defconfig//' ./common/build.config.gki
       if [ -f "build/build.sh" ]; then
+        # Disable GKI KMI enforcement so out-of-tree/new modules (e.g. rt2x00,
+        # cfg80211, mac80211) don't fail the build over module-list/symbol-list
+        # mismatches. KMI_ENFORCED has no env-var fallback, so it needs a direct edit.
+        if [ -f "common/build.config.gki.aarch64" ]; then
+          sed -i 's/^KMI_ENFORCED=1/KMI_ENFORCED=0/' common/build.config.gki.aarch64
+        fi
+
+        TRIM_NONLISTED_KMI=0 \
+        KMI_SYMBOL_LIST_STRICT_MODE=0 \
         BUILD_GKI_ARTIFACTS="" \
         BUILD_GKI_CERTIFICATION_TOOLS=0 \
         BUILD_SYSTEM_DLKM=0 \
