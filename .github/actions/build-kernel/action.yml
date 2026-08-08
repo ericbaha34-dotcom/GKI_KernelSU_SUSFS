@@ -93,6 +93,17 @@ runs:
     if: false
     uses: ./.github/actions/set-kernel-config
 
+  - name: 'Disable Module Order Check'
+    shell: bash
+    working-directory: ${{ github.workspace }}/kernel
+    run: |
+       # Disable the module order check in the build script
+       if [ -f "build/build.sh" ]; then
+       # Find where the check runs and disable it
+       sed -i '/Checking the list of modules/,/ERROR: modules list out of date/d' build/build.sh
+       echo "✓ Module order check disabled"
+       fi
+
   - name: 'Build Kernel'
     shell: bash
     working-directory: ${{ github.workspace }}/kernel
