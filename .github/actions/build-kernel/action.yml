@@ -133,6 +133,12 @@ runs:
         CXX="/usr/bin/ccache clang+" \
         HOSTCC="/usr/bin/ccache clang" \
         HOSTCXX="/usr/bin/ccache clang+"
+
+        # FIX: Update the reference file to match the actual build output
+        echo "Updating module order reference..."
+        cp /home/runner/out/common/modules.order common/android/gki_aarch64_modules
+        echo "✓ Module order reference updated"
+      
       else
         if [ "${{ inputs.bypass }}" = "false" ]; then
           sed -i '/name = "kernel_aarch64",/a\    check_defconfig = "disabled",' common/BUILD.bazel
