@@ -384,6 +384,16 @@ jobs:
         version: ${{ inputs.version }}
         bypass: false
 
+    - name: 'Upload vmlinux for CRC check'
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: vmlinux-debug
+        path: |
+          /home/runner/out/dist/vmlinux
+          bazel-bin/common/kernel_aarch64_dist/vmlinux
+        if-no-files-found: warn
+
     - name: Get Cache Stats
       uses: ./.github/actions/cache-stats
       with:
