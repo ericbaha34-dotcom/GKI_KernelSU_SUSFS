@@ -243,6 +243,7 @@ jobs:
           CONFIG_CRYPTO_GCM=y
           CONFIG_CRYPTO_CMAC=y
           CONFIG_CRYPTO_ARC4=y
+          CONFIG_MODULE_FORCE_LOAD=y          
           
     - name: Apply ABI Compare Bypass
       if: ${{ inputs.kernel_version == '5.10' }}
