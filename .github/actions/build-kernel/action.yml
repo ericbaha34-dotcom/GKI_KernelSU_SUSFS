@@ -37,6 +37,24 @@ runs:
   - name: Setup Kernel Configs
     if: false
     uses: ./.github/actions/set-kernel-config
+
+  - name: 'Whitelist Ralink Wi-Fi Modules'
+    shell: bash
+    working-directory: ${{ github.workspace }}/kernel
+    run: |
+      set -euo pipefail
+      LIST_FILE="common/android/gki_aarch64_modules"
+      for mod in \
+        "drivers/net/wireless/ralink/rt2x00/rt2x00lib.ko" \
+        "drivers/net/wireless/ralink/rt2x00/rt2x00usb.ko" \
+        "drivers/net/wireless/ralink/rt2x00/rt2800lib.ko" \
+        "drivers/net/wireless/ralink/rt2x00/rt2800usb.ko" \
+        "net/wireless/cfg80211.ko" \
+        "net/mac80211/mac80211.ko"; do
+        if ! grep -qxF "$mod" "$LIST_FILE" 2>/dev/null; then
+          echo "$mod" >> "$LIST_FILE"
+        fi
+      done
   
   - name: 'Build Kernel'
     shell: bash
