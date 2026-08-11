@@ -243,6 +243,11 @@ jobs:
           CONFIG_CRYPTO_CMAC=y
           CONFIG_CRYPTO_ARC4=y
 
+    - name: List bazel targets
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel
+      run: tools/bazel query //common:all | grep -i dist
+
     - name: Apply ABI Compare Bypass
       if: false
       working-directory: ${{ github.workspace }}/kernel
