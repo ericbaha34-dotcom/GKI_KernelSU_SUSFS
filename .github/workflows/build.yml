@@ -243,9 +243,12 @@ jobs:
           CONFIG_CRYPTO_GCM=y
           CONFIG_CRYPTO_CMAC=y
           CONFIG_CRYPTO_ARC4=y
-
+          
     - name: Apply ABI Compare Bypass
-      if: false
+      if: ${{ inputs.kernel_version == '5.10' }}
+      env:
+        ANDROID_VERSION: ${{ inputs.android_version }}
+        KERNEL_VERSION: ${{ inputs.kernel_version }}
       working-directory: ${{ github.workspace }}/kernel
       run: |
         # ABI compare bypass per kernel/android version
@@ -263,7 +266,7 @@ jobs:
         elif [[ "$ANDROID_VERSION" == "android15" && "$KERNEL_VERSION" == "6.6" ]]; then
           perl -i -pe 's/^(\s*)return 1$/$1print("Who Cares? Bypassing Now!")\n$1return 0/g if /if missing_symbols:/../return 1/' build/kernel/abi/check_buildtime_symbol_protection.py
         fi
-
+        
     - name: Apply Kernel Branding
       uses: ./.github/actions/apply-kernel-branding
       with:
