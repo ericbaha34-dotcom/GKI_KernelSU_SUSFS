@@ -124,6 +124,20 @@ jobs:
         kernel_version: ${{ inputs.kernel_version }}
         os_patch_level: ${{ inputs.os_patch_level }}
 
+    - name: Enable Ralink USB WiFi modules
+      if: inputs.version == 'android12-5.10'
+      uses: ./.github/actions/set-kernel-config
+      with:
+        config_list: |
+          CONFIG_CFG80211=m
+          CONFIG_MAC80211=m
+          CONFIG_RT2800USB=m
+          CONFIG_RT2800USB_RT33XX=m
+          CONFIG_RT2800USB_RT35XX=m
+          CONFIG_RT2800USB_RT3573=m
+          CONFIG_RT2800USB_RT53XX=m
+          CONFIG_RT2800USB_RT55XX=m
+
     - name: Set Build Timestamp from Kernel Commit
       shell: bash
       run: |
