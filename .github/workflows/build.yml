@@ -124,15 +124,13 @@ jobs:
         kernel_version: ${{ inputs.kernel_version }}
         os_patch_level: ${{ inputs.os_patch_level }}
 
-    - name: Inspect GKI module validation
+    - name: Update GKI module manifest
       if: inputs.version == 'android12-5.10'
       shell: bash
       working-directory: ${{ github.workspace }}/kernel
       run: |
         set -euo pipefail
-        grep -Rni -B15 -A25 \
-          "Checking the list of modules" \
-          build 2>/dev/null || true
+        sed -i '/^[[:space:]]*echo " Checking the list of modules:"$/i\  cp "${OUT_DIR}/modules.order" "${KERNEL_DIR}/common/android/gki_aarch64_modules"' build/build.sh
 
     - name: Enable Ralink USB WiFi modules
       if: inputs.version == 'android12-5.10'
