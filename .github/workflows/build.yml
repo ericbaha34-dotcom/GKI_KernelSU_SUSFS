@@ -130,7 +130,7 @@ jobs:
       working-directory: ${{ github.workspace }}/kernel
       run: |
         set -euo pipefail
-        sed -i '/^[[:space:]]*echo " Checking the list of modules:"$/i\  cp "${OUT_DIR}/modules.order" "${KERNEL_DIR}/common/android/gki_aarch64_modules"' build/build.sh
+        sed -i '/^[[:space:]]*echo " Checking the list of modules:"$/i\  cp "${OUT_DIR}/modules.order" "${KERNEL_DIR}/android/gki_aarch64_modules"' build/build.sh
 
     - name: Enable Ralink USB WiFi modules
       if: inputs.version == 'android12-5.10'
