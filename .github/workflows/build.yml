@@ -132,6 +132,17 @@ jobs:
         set -euo pipefail
         sed -i '/^[[:space:]]*echo " Checking the list of modules:"$/i\  cp "${OUT_DIR}/modules.order" "${KERNEL_DIR}/android/gki_aarch64_modules"' build/build.sh
 
+    - name: Locate GKI KMI symbol list
+      if: inputs.version == 'android12-5.10'
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel
+      run: |
+        set -euo pipefail
+        echo "=== KMI configuration ==="
+        grep -RniE 'KMI_SYMBOL_LIST|abi_gki_aarch64|abi_symbollist' common/build.config.gki* common/build* common/android 2>/dev/null | head -100 || true
+        echo "=== Candidate symbol-list files ==="
+        find common -type f ( -name 'abi_gki*' -o -name '*symbollist*' -o -name '*symbol*list*' ) -print
+
     - name: Enable Ralink USB WiFi modules
       if: inputs.version == 'android12-5.10'
       uses: ./.github/actions/set-kernel-config
