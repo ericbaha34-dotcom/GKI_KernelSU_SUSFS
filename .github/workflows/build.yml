@@ -137,6 +137,7 @@ jobs:
 
         for sym in \
           crc_ccitt \
+          clk_get_sys \
           led_blink_set \
           led_classdev_resume \
           led_classdev_suspend \
