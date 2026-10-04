@@ -1,0 +1,62 @@
+From cdcde12d75bf59d84e111bc1f30f0e4910ae45b3 Mon Sep 17 00:00:00 2001
+From: Kalesh Singh <kaleshsingh@google.com>
+Date: Tue, 1 Aug 2023 19:56:04 -0700
+Subject: [PATCH 21/23] FROMGIT: BACKPORT: Multi-gen LRU: Fix can_swap in
+ lru_gen_look_around()
+
+walk->can_swap might be invalid since it's not guaranteed to be
+initialized for the particular lruvec.  Instead deduce it from the folio
+type (anon/file).
+
+Link: https://lkml.kernel.org/r/20230802025606.346758-3-kaleshsingh@google.com
+Fixes: 018ee47f1489 ("mm: multi-gen LRU: exploit locality in rmap")
+Change-Id: I1ae78011d4972d87bac9f2db8c56352cdb7a9be6
+Signed-off-by: Kalesh Singh <kaleshsingh@google.com>
+Tested-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com> [mediatek]
+Tested-by: Charan Teja Kalla <quic_charante@quicinc.com>
+Cc: Yu Zhao <yuzhao@google.com>
+Cc: Aneesh Kumar K V <aneesh.kumar@linux.ibm.com>
+Cc: Barry Song <baohua@kernel.org>
+Cc: Brian Geffon <bgeffon@google.com>
+Cc: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+Cc: Lecopzer Chen <lecopzer.chen@mediatek.com>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Qi Zheng <zhengqi.arch@bytedance.com>
+Cc: Steven Barrett <steven@liquorix.net>
+Cc: Suleiman Souhlal <suleiman@google.com>
+Cc: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+(cherry picked from commit fdf19e8c8f1cdcee4eccf4c98a875f44f39d8b9d https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-unstable)
+Bug: 288383787
+Bug: 291719697
+[ Kalesh Singh - Fix trivial conflict in lru_gen_look_around() ]
+Signed-off-by: Kalesh Singh <kaleshsingh@google.com>
+---
+ mm/vmscan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 0b761c84a..b7e95f32a 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4119,6 +4119,7 @@ void lru_gen_look_around(struct page_vma_mapped_walk *pvmw)
+ 	int young = 0;
+ 	unsigned long bitmap[BITS_TO_LONGS(MIN_LRU_BATCH)] = {};
+ 	struct page *page = pvmw->page;
++	bool can_swap = !page_is_file_lru(page);
+ 	struct mem_cgroup *memcg = page_memcg(page);
+ 	struct pglist_data *pgdat = page_pgdat(page);
+ 	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+@@ -4163,7 +4164,7 @@ void lru_gen_look_around(struct page_vma_mapped_walk *pvmw)
+ 		if (!pte_young(pte[i]))
+ 			continue;
+ 
+-		page = get_pfn_page(pfn, memcg, pgdat, !walk || walk->can_swap);
++		page = get_pfn_page(pfn, memcg, pgdat, can_swap);
+ 		if (!page)
+ 			continue;
+ 
+-- 
+2.55.0
+

@@ -1,0 +1,51 @@
+From dc7335a3562bab11d82c60470885fc9f08e2636c Mon Sep 17 00:00:00 2001
+From: Charan Teja Kalla <quic_charante@quicinc.com>
+Date: Wed, 9 Aug 2023 13:35:44 +0530
+Subject: [PATCH 23/23] FROMGIT: Multi-gen LRU: skip CMA pages when they are
+ not eligible
+
+This patch is based on the commit 5da226dbfce3("mm: skip CMA pages when
+they are not available") which skips cma pages reclaim when they are not
+eligible for the current allocation context.  In mglru, such pages are
+added to the tail of the immediate generation to maintain better LRU
+order, which is unlike the case of conventional LRU where such pages are
+directly added to the head of the LRU list(akin to adding to head of the
+youngest generation in mglru).
+
+No observable issue without this patch on MGLRU, but logically it make
+sense to skip the CMA page reclaim when those pages can't be satisfied for
+the current allocation context.
+
+Link: https://lkml.kernel.org/r/1691568344-13475-1-git-send-email-quic_charante@quicinc.com
+Change-Id: I586415b3e3a92da23f3e79b9d63802a2ced03432
+Signed-off-by: Charan Teja Kalla <quic_charante@quicinc.com>
+Reviewed-by: Kalesh Singh <kaleshsingh@google.com>
+Cc: David Hildenbrand <david@redhat.com>
+Cc: Suren Baghdasaryan <surenb@google.com>
+Cc: Yu Zhao <yuzhao@google.com>
+Cc: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+(cherry picked from commit 75d52d9304ef5b268eb798b0c679815290a0fc83 https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-unstable)
+Bug: 288383787
+Bug: 291719697
+Signed-off-by: Kalesh Singh <kaleshsingh@google.com>
+---
+ mm/vmscan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 564a9ce9b..7caac9d9e 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4306,7 +4306,7 @@ static bool sort_page(struct lruvec *lruvec, struct page *page, struct scan_cont
+ 	}
+ 
+ 	/* ineligible */
+-	if (zone > sc->reclaim_idx) {
++	if (zone > sc->reclaim_idx || skip_cma(page, sc)) {
+ 		gen = page_inc_gen(lruvec, page, false);
+ 		list_move_tail(&page->lru, &lrugen->lists[gen][type][zone]);
+ 		return true;
+-- 
+2.55.0
+

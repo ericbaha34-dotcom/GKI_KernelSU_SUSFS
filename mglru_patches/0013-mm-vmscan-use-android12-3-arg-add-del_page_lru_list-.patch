@@ -1,0 +1,53 @@
+From c4bfdde7e98978f0e457bca3170c7c0dc14b38ad Mon Sep 17 00:00:00 2001
+From: Bahaa <ericbaha34@gmail.com>
+Date: Mon, 28 Sep 2026 14:18:38 +0300
+Subject: [PATCH 13/23] mm/vmscan: use android12 3-arg add/del_page_lru_list
+ helpers
+
+---
+ mm/vmscan.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index cae70ad7a..c9923748c 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4277,7 +4277,7 @@ static bool sort_page(struct lruvec *lruvec, struct page *page, int tier_idx)
+ 		success = lru_gen_del_page(lruvec, page, true);
+ 		VM_WARN_ON_ONCE_PAGE(!success, page);
+ 		SetPageUnevictable(page);
+-		add_page_to_lru_list(page, lruvec);
++		add_page_to_lru_list(page, lruvec, page_lru(page));
+ 		__count_vm_events(UNEVICTABLE_PGCULLED, delta);
+ 		return true;
+ 	}
+@@ -4287,7 +4287,7 @@ static bool sort_page(struct lruvec *lruvec, struct page *page, int tier_idx)
+ 		success = lru_gen_del_page(lruvec, page, true);
+ 		VM_WARN_ON_ONCE_PAGE(!success, page);
+ 		SetPageSwapBacked(page);
+-		add_page_to_lru_list_tail(page, lruvec);
++		add_page_to_lru_list_tail(page, lruvec, page_lru(page));
+ 		return true;
+ 	}
+ 
+@@ -4778,7 +4778,7 @@ static bool fill_evictable(struct lruvec *lruvec)
+ 			VM_WARN_ON_ONCE_PAGE(page_is_file_lru(page) != type, page);
+ 			VM_WARN_ON_ONCE_PAGE(page_lru_gen(page) != -1, page);
+ 
+-			del_page_from_lru_list(page, lruvec);
++			del_page_from_lru_list(page, lruvec, page_lru(page));
+ 			success = lru_gen_add_page(lruvec, page, false);
+ 			VM_WARN_ON_ONCE(!success);
+ 
+@@ -4809,7 +4809,7 @@ static bool drain_evictable(struct lruvec *lruvec)
+ 
+ 			success = lru_gen_del_page(lruvec, page, false);
+ 			VM_WARN_ON_ONCE(!success);
+-			add_page_to_lru_list(page, lruvec);
++			add_page_to_lru_list(page, lruvec, page_lru(page));
+ 
+ 			if (!--remaining)
+ 				return false;
+-- 
+2.55.0
+

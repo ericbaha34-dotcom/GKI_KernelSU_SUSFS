@@ -1,0 +1,78 @@
+From 76b32af7044f392e72348daea618e42760b6fe81 Mon Sep 17 00:00:00 2001
+From: Kalesh Singh <kaleshsingh@google.com>
+Date: Tue, 23 May 2023 13:59:21 -0700
+Subject: [PATCH 17/23] BACKPORT: FROMGIT: Multi-gen LRU: fix workingset
+ accounting
+
+On Android app cycle workloads, MGLRU showed a significant reduction in
+workingset refaults although pgpgin/pswpin remained relatively unchanged.
+This indicated MGLRU may be undercounting workingset refaults.
+
+This has impact on userspace programs, like Android's LMKD, that monitor
+workingset refault statistics to detect thrashing.
+
+It was found that refaults were only accounted if the MGLRU shadow entry
+was for a recently evicted folio.  However, recently evicted folios should
+be accounted as workingset activation, and refaults should be accounted
+regardless of recency.
+
+Fix MGLRU's workingset refault and activation accounting to more closely
+match that of the conventional active/inactive LRU.
+
+Link: https://lkml.kernel.org/r/20230523205922.3852731-1-kaleshsingh@google.com
+Fixes: ac35a4902374 ("mm: multi-gen LRU: minimal implementation")
+Signed-off-by: Kalesh Singh <kaleshsingh@google.com>
+Reported-by: Charan Teja Kalla <quic_charante@quicinc.com>
+Acked-by: Yu Zhao <yuzhao@google.com>
+Cc: Brian Geffon <bgeffon@google.com>
+Cc: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+Cc: Oleksandr Natalenko <oleksandr@natalenko.name>
+Cc: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+(cherry picked from commit 02ad728453d2ddb09d7ce5e59854ebb27544d488 https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-unstable)
+Bug: 284043217
+[ Kalesh Singh - Fix conflicts in mm/workingset.c ]
+Signed-off-by: Kalesh Singh <kaleshsingh@google.com>
+Change-Id: I6d42cca9064e66099fbbc20aa2143961f84b2003
+---
+ mm/vmscan.c     | 1 -
+ mm/workingset.c | 4 +++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 1cd1f72b3..d54086675 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4279,7 +4279,6 @@ static bool sort_page(struct lruvec *lruvec, struct page *page, int tier_idx)
+ 
+ 		WRITE_ONCE(lrugen->protected[hist][type][tier - 1],
+ 			   lrugen->protected[hist][type][tier - 1] + delta);
+-		__mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + type, delta);
+ 		return true;
+ 	}
+ 
+diff --git a/mm/workingset.c b/mm/workingset.c
+index beacfc21a..c4a6bc03a 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -270,6 +270,8 @@ static void lru_gen_refault(struct page *page, void *shadow)
+ 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
+ 	lrugen = &lruvec->lrugen;
+ 
++	mod_lruvec_state(lruvec, WORKINGSET_REFAULT_BASE + type, delta);
++
+ 	min_seq = READ_ONCE(lrugen->min_seq[type]);
+ 	if ((token >> LRU_REFS_WIDTH) != (min_seq & (EVICTION_MASK >> LRU_REFS_WIDTH)))
+ 		goto unlock;
+@@ -280,7 +282,7 @@ static void lru_gen_refault(struct page *page, void *shadow)
+ 	tier = lru_tier_from_refs(refs);
+ 
+ 	atomic_long_add(delta, &lrugen->refaulted[hist][type][tier]);
+-	mod_lruvec_state(lruvec, WORKINGSET_REFAULT_BASE + type, delta);
++	mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + type, delta);
+ 
+ 	/*
+ 	 * Count the following two cases as stalls:
+-- 
+2.55.0
+
