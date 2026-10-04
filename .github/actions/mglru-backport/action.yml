@@ -1,0 +1,30 @@
+name: 'Apply MGLRU Backport'
+description: 'Cherry-picks the android13-5.10 Multi-Gen LRU series onto android12-5.10'
+inputs:
+  version:
+    description: 'Kernel config version (e.g., android12-5.10)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Apply MGLRU patch series
+      if: inputs.version == 'android12-5.10'
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        set -euo pipefail
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        PATCH_DIR="${{ github.workspace }}/mglru_patches"
+        test -d "$PATCH_DIR" || { echo "Missing mglru_patches dir" >&2; exit 1; }
+
+        echo "Applying MGLRU series from $PATCH_DIR"
+        if ! git am --3way "$PATCH_DIR"/*.patch; then
+          echo "MGLRU patch series failed to apply cleanly:" >&2
+          git am --show-current-patch=diff >&2 || true
+          git am --abort
+          exit 1
+        fi
+        echo "MGLRU series applied: $(git log --oneline -1)"
