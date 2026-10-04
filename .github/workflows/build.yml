@@ -202,6 +202,12 @@ jobs:
         fi
         echo "commit=${SUSFS_COMMIT}" >> "$GITHUB_OUTPUT"
 
+    - name: Apply MGLRU Backport
+      if: contains(inputs.feature_set, 'MGLRU')
+      uses: ./.github/actions/mglru-backport
+      with:
+        version: ${{ inputs.version }}
+
     - name: SUSFS
       if: contains(inputs.feature_set, 'SUSFS') || inputs.feature_set == 'All'
       uses: ./.github/actions/susfs
