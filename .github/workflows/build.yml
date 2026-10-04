@@ -208,6 +208,14 @@ jobs:
       with:
         version: ${{ inputs.version }}
 
+    - name: Enable MGLRU in defconfig
+      if: contains(inputs.feature_set, 'MGLRU')
+      uses: ./.github/actions/set-kernel-config
+      with:
+        config_list: |
+          CONFIG_LRU_GEN=y
+          CONFIG_LRU_GEN_ENABLED=y
+
     - name: SUSFS
       if: contains(inputs.feature_set, 'SUSFS') || inputs.feature_set == 'All'
       uses: ./.github/actions/susfs
