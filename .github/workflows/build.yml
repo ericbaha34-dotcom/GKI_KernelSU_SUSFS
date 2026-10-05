@@ -553,7 +553,7 @@ jobs:
       uses: ./.github/actions/bypass-kernel
       with:
         version: ${{ inputs.version }}
-        allow_version_mismatch: true
+        bypass: ${{ inputs.allow_version_mismatch }}
 
     - name: Build Normal Kernel
       env:
