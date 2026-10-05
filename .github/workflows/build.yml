@@ -650,6 +650,11 @@ jobs:
           NOMOUNT_ENABLED="true"
         fi
 
+        SUSFS_ENABLED="false"
+        if [ "${{ contains(inputs.feature_set, 'SUSFS') || inputs.feature_set == 'All' }}" = "true" ]; then
+          SUSFS_ENABLED="true"
+        fi
+
         if [ "$NOMOUNT_ENABLED" = "true" ]; then
           METHOD="GKI source build with SHA-pinned root implementation, SUSFS, and NoMount"
           NOMOUNT_MODULE_COMMIT="${{ inputs.nomount_commit }}"
@@ -766,7 +771,6 @@ jobs:
           .status == "Build-verified only" and
           (.root.manager | length > 0) and
           (.root.version | length > 0) and
-          (.susfs_revision | test("^[0-9a-f]{40}$")) and
           (.kernel_source_commit | test("^[0-9a-f]{40}$")) and
           (.artifact_url | startswith("https://")) and
           (.sha256 | test("^sha256:[0-9a-f]{64}$")) and
@@ -775,6 +779,11 @@ jobs:
           .catalog.flashability == "not-guaranteed" and
           .catalog.boot == "not-guaranteed"
         ' "$metadata_file" > /dev/null
+        if [ "$SUSFS_ENABLED" = "true" ]; then
+          jq -e '(.susfs_revision | test("^[0-9a-f]{40}$"))' "$metadata_file" > /dev/null
+        else
+          jq -e '(.susfs_revision == "N/A")' "$metadata_file" > /dev/null
+        fi
         if [ "$NOMOUNT_ENABLED" = "true" ]; then
           jq -e '
             (.nomount_commit | test("^[0-9a-f]{40}$")) and
