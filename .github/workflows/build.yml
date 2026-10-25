@@ -715,6 +715,17 @@ jobs:
           fi
         } > "$SUMMARY_FILE"
 
+    - name: Collect WiFi modules
+      if: success()
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "${{ github.workspace }}/AnyKernel3/modules"
+        find /home/runner/out "${{ github.workspace }}/kernel" -type f -name '*.ko' \
+          \( -name 'cfg80211.ko' -o -name 'mac80211.ko' -o -name 'rt2*.ko' -o -name 'rt2800*.ko' \) \
+          -exec cp -v {} "${{ github.workspace }}/AnyKernel3/modules/" \; 2>/dev/null || true
+        ls -l "${{ github.workspace }}/AnyKernel3/modules/"
+
     - name: Upload Artifacts
       id: kernel-artifact
       uses: actions/upload-artifact@v7
