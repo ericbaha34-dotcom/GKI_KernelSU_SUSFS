@@ -429,6 +429,21 @@ jobs:
           CONFIG_MAC80211_RC_MINSTREL=y
           CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
 
+    - name: Register WiFi modules in GKI modules list
+      if: inputs.kernel_version == '5.10'
+      shell: bash
+      run: |
+        set -euo pipefail
+        LIST="${{ github.workspace }}/kernel/common/android/gki_aarch64_modules"
+        printf '%s\n' \
+          drivers/net/wireless/ralink/rt2x00/rt2x00lib.ko \
+          drivers/net/wireless/ralink/rt2x00/rt2x00usb.ko \
+          drivers/net/wireless/ralink/rt2x00/rt2800lib.ko \
+          drivers/net/wireless/ralink/rt2x00/rt2800usb.ko \
+          net/wireless/cfg80211.ko \
+          net/mac80211/mac80211.ko > "$LIST"
+        cat "$LIST"
+
     - name: Integrate NoMount
       if: contains(inputs.feature_set, 'NoMount') || inputs.feature_set == 'All'
       uses: ./.github/actions/nomount
