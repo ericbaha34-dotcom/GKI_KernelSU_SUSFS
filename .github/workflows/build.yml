@@ -444,6 +444,19 @@ jobs:
           net/mac80211/mac80211.ko > "$LIST"
         cat "$LIST"
 
+    - name: Add WiFi symbols to KMI symbol list
+      if: inputs.kernel_version == '5.10'
+      shell: bash
+      run: |
+        set -euo pipefail
+        LIST="${{ github.workspace }}/kernel/common/android/abi_gki_aarch64"
+        [ -f "$LIST" ] || { echo "missing $LIST" >&2; exit 1; }
+        [ -n "$(tail -c1 "$LIST")" ] && echo >> "$LIST"
+        for s in clk_get_sys crc_ccitt led_classdev_resume led_classdev_suspend; do
+          grep -qxE "[[:space:]]*$s" "$LIST" || printf '  %s\n' "$s" >> "$LIST"
+        done
+        tail -6 "$LIST"
+
     - name: Integrate NoMount
       if: contains(inputs.feature_set, 'NoMount') || inputs.feature_set == 'All'
       uses: ./.github/actions/nomount
