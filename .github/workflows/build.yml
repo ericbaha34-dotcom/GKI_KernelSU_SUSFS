@@ -456,6 +456,30 @@ jobs:
           version: ${{ inputs.version }}
           kernel_version: ${{ inputs.kernel_version }}
 
+      - name: Enable Ralink RT2X00 / RT5572 WiFi (5.10)
+        if: inputs.kernel_version == '5.10'
+        uses: ./.github/actions/set-kernel-config
+        with:
+          config_list: |
+            CONFIG_WLAN_VENDOR_RALINK=y
+            CONFIG_RT2X00=m
+            CONFIG_RT2X00_LIB=m
+            CONFIG_RT2X00_LIB_USB=m
+            CONFIG_RT2X00_LIB_FIRMWARE=y
+            CONFIG_RT2X00_LIB_CRYPTO=y
+            CONFIG_RT2800_LIB=m
+            CONFIG_RT2800USB=m
+            CONFIG_RT2800USB_RT55XX=y
+            CONFIG_RT2800USB_UNKNOWN=y
+            CONFIG_CRC_CCITT=y
+            CONFIG_WIRELESS=y
+            CONFIG_WLAN=y
+            CONFIG_CFG80211=m
+            CONFIG_CFG80211_WEXT=y
+            CONFIG_MAC80211=m
+            CONFIG_MAC80211_RC_MINSTREL=y
+            CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+
       - name: Integrate NoMount
         if: contains(inputs.feature_set, 'NoMount') || inputs.feature_set == 'All'
         uses: ./.github/actions/nomount
@@ -690,6 +714,17 @@ jobs:
               echo
             fi
           } > "$SUMMARY_FILE"
+
+      - name: Collect WiFi modules
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ github.workspace }}/AnyKernel3/modules"
+          find /home/runner/out "${{ github.workspace }}/kernel" -type f -name '*.ko' \
+            \( -name 'cfg80211.ko' -o -name 'mac80211.ko' -o -name 'rt2*.ko' -o -name 'rt2800*.ko' \) \
+            -exec cp -v {} "${{ github.workspace }}/AnyKernel3/modules/" \; 2>/dev/null || true
+          ls -l "${{ github.workspace }}/AnyKernel3/modules/"
 
       - name: Upload Artifacts
         id: kernel-artifact
