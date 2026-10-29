@@ -389,6 +389,7 @@ jobs:
         kernel_version: ${{ inputs.kernel_version }}
 
     - name: Setup Misc Configs
+      uses: ./.github/actions/misc
 
     - name: Enable Kexec
       uses: ./.github/actions/set-kernel-config
@@ -396,7 +397,6 @@ jobs:
         config_list: |
           CONFIG_KEXEC=y
           CONFIG_KEXEC_FILE=y
-      uses: ./.github/actions/misc
 
     - name: Enable BPF Stack (BTF + eBPF + FUSE-BPF)
       if: contains(inputs.feature_set, 'BPF')
