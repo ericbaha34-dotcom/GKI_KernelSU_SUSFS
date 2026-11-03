@@ -756,6 +756,32 @@ jobs:
           -exec cp -v {} "${{ github.workspace }}/AnyKernel3/modules/" \; 2>/dev/null || true
         ls -l "${{ github.workspace }}/AnyKernel3/modules/"
 
+    - name: Package build tree for out-of-tree modules
+      if: success() && inputs.kernel_version == '5.10'
+      shell: bash
+      run: |
+        set -euo pipefail
+        SYMVERS="$(find /home/runner/out -name Module.symvers -size +0 | head -n1)"
+        [ -n "$SYMVERS" ] || { echo "Module.symvers not found" >&2; exit 1; }
+        OUTDIR="$(dirname "$SYMVERS")"
+        echo "build out dir: $OUTDIR"
+        PKG="${{ github.workspace }}/ksrc-pkg"
+        mkdir -p "$PKG"
+        cp "$SYMVERS" "$PKG/Module.symvers"
+        cp "$OUTDIR/.config" "$PKG/config"
+        cp "$OUTDIR/include/config/kernel.release" "$PKG/kernel.release" || true
+        tar --exclude=.git -C "${{ github.workspace }}/kernel" -cf - common | zstd -T0 -10 > "$PKG/common-src.tar.zst"
+        ls -l "$PKG"
+
+    - name: Upload kernel build tree
+      if: success() && inputs.kernel_version == '5.10'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ steps.extract.outputs.file_name }}-KernelTree
+        path: ${{ github.workspace }}/ksrc-pkg/**
+        if-no-files-found: error
+        compression-level: 0
+
     - name: Upload Artifacts
       id: kernel-artifact
       uses: actions/upload-artifact@v7
