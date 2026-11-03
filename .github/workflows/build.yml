@@ -428,6 +428,8 @@ jobs:
           CONFIG_MAC80211=m
           CONFIG_MAC80211_RC_MINSTREL=y
           CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+          CONFIG_MODULE_FORCE_LOAD=y
+          CONFIG_MODULE_FORCE_UNLOAD=y
 
     - name: Register WiFi modules in GKI modules list
       if: inputs.kernel_version == '5.10'
